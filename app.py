@@ -1,12 +1,13 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify
 from datetime import datetime
+from math import radians, sin, cos, sqrt, atan2
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from ml.model import predict_waste, match_farmers, get_upcoming_festivals, train_waste_model
 
 app = Flask(__name__)
 
-# ── Simple in-memory DB (replace with SQLite for production) ──
+# ── In-memory DB ──────────────────────────────────────────────────────
 DB = {
     "temples": [
         {"id": 1, "name": "Manakula Vinayagar Temple", "name_ta": "மணக்குள விநாயகர் கோவில்",
@@ -32,13 +33,35 @@ DB = {
     "matches": []
 }
 
-# ── Train model on startup ──
+# ── Train ML model on startup ─────────────────────────────────────────
 try:
     train_waste_model()
 except Exception as e:
     print(f"Model training skipped: {e}")
 
-# ── Routes ──────────────────────────────────────────────────────────
+# ── Route Optimizer Functions ─────────────────────────────────────────
+def haversine_dist(lat1, lon1, lat2, lon2):
+    R = 6371
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat/2)**2 + cos(radians(lat1))*cos(radians(lat2))*sin(dlon/2)**2
+    return R * 2 * atan2(sqrt(a), sqrt(1-a))
+
+def optimize_route(farmer_lat, farmer_lon, temples):
+    unvisited = temples.copy()
+    route = []
+    total = 0
+    clat, clon = farmer_lat, farmer_lon
+    while unvisited:
+        nearest = min(unvisited, key=lambda t: haversine_dist(clat, clon, t["lat"], t["lon"]))
+        dist = haversine_dist(clat, clon, nearest["lat"], nearest["lon"])
+        total += dist
+        route.append({**nearest, "dist_from_prev": round(dist, 2), "cumulative_km": round(total, 2)})
+        clat, clon = nearest["lat"], nearest["lon"]
+        unvisited.remove(nearest)
+    return route, round(total + haversine_dist(clat, clon, farmer_lat, farmer_lon), 2)
+
+# ── Page Routes ───────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
@@ -55,13 +78,11 @@ def index():
 def temple_dashboard():
     today = datetime.today()
     festivals = get_upcoming_festivals(30)
-    return render_template("temple.html", temples=DB["temples"],
-                           festivals=festivals, today=today)
+    return render_template("temple.html", temples=DB["temples"], festivals=festivals, today=today)
 
 @app.route("/farmer")
 def farmer_dashboard():
-    return render_template("farmer.html", farmers=DB["farmers"],
-                           temples=DB["temples"])
+    return render_template("farmer.html", farmers=DB["farmers"], temples=DB["temples"])
 
 @app.route("/admin")
 def admin_dashboard():
@@ -76,7 +97,11 @@ def admin_dashboard():
     return render_template("admin.html", festivals=festivals, stats=stats,
                            temples=DB["temples"], farmers=DB["farmers"])
 
-# ── API Endpoints ────────────────────────────────────────────────────
+@app.route("/route")
+def route_optimizer():
+    return render_template("route.html", temples=DB["temples"], farmers=DB["farmers"])
+
+# ── API Routes ────────────────────────────────────────────────────────
 
 @app.route("/api/predict", methods=["POST"])
 def api_predict():
@@ -88,14 +113,11 @@ def api_predict():
         weekday=today.weekday(),
         temple_size=data.get("temple_size", "medium")
     )
-    # Find and attach matched farmers
     temple_id = int(data.get("temple_id", 1))
     temple = next((t for t in DB["temples"] if t["id"] == temple_id), DB["temples"][0])
     matched = match_farmers(temple["lat"], temple["lon"], DB["farmers"], top_k=3)
     result["matched_farmers"] = matched
     result["temple_name"] = temple["name"]
-
-    # Log it
     log_entry = {
         "temple": temple["name"],
         "predicted_kg": result["predicted_kg"],
@@ -158,6 +180,36 @@ def api_stats():
         "total_waste_kg": round(sum(log.get("predicted_kg", 0) for log in DB["waste_logs"]), 1),
         "fertilizer_saved_kg": round(sum(log.get("predicted_kg", 0) for log in DB["waste_logs"]) * 0.3, 1),
         "co2_saved_kg": round(sum(log.get("predicted_kg", 0) for log in DB["waste_logs"]) * 0.5, 1),
+    })
+
+@app.route("/api/optimize-route", methods=["POST"])
+def api_optimize_route():
+    data = request.json
+    farmer_id = int(data.get("farmer_id", 1))
+    temple_ids = data.get("temple_ids", [int(t["id"]) for t in DB["temples"]])
+    selected_temples = [t for t in DB["temples"] if t["id"] in temple_ids]
+    farmer = next((f for f in DB["farmers"] if f["id"] == farmer_id), DB["farmers"][0])
+    today = datetime.today()
+    temples_copy = []
+    for temple in selected_temples:
+        t = dict(temple)
+        pred = predict_waste(today.month, today.day, today.weekday(), t["size"])
+        t["predicted_kg"] = pred["predicted_kg"]
+        t["festival"] = pred["festival"]
+        t["urgency"] = "CRITICAL" if pred["predicted_kg"] > 200 else "HIGH" if pred["predicted_kg"] > 80 else "MEDIUM" if pred["predicted_kg"] > 30 else "LOW"
+        temples_copy.append(t)
+    route, total_km = optimize_route(farmer["lat"], farmer["lon"], temples_copy)
+    total_waste = sum(t["predicted_kg"] for t in temples_copy)
+    fuel_saved = max(0, round((len(temples_copy) * 3.5) - total_km, 2))
+    return jsonify({
+        "farmer": farmer,
+        "route": route,
+        "total_km": total_km,
+        "total_waste_kg": round(total_waste, 1),
+        "temples_count": len(route),
+        "fuel_saved_km": fuel_saved,
+        "co2_saved_kg": round(fuel_saved * 0.21, 2),
+        "estimated_time_mins": round(total_km * 3, 0)
     })
 
 if __name__ == "__main__":
