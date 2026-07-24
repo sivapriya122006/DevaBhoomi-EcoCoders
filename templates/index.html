@@ -1,0 +1,117 @@
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-pattern"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <span class="dot dot-saffron"></span>
+      <span data-en="India's Temple Waste Intelligence Platform" data-ta="இந்தியாவின் கோவில் கழிவு நுண்ணறிவு தளம்">India's Temple Waste Intelligence Platform</span>
+    </div>
+    <h1 class="hero-title">
+      <span class="title-sacred" data-en="Sacred Waste." data-ta="புனித கழிவு.">Sacred Waste.</span><br/>
+      <span class="title-impact" data-en="Real Impact." data-ta="உண்மையான தாக்கம்.">Real Impact.</span>
+    </h1>
+    <p class="hero-sub" data-en="India's 5 lakh temples discard 800+ tonnes of flower waste daily. Our ML engine predicts it, matches nearby farmers, and converts it to compost — before it reaches the landfill." data-ta="இந்தியாவின் 5 லட்சம் கோவில்கள் தினமும் 800+ டன் மலர் கழிவை வீணடிக்கின்றன. எங்கள் ML இயந்திரம் அதை முன்கூட்டியே கணித்து, அருகில் உள்ள விவசாயிகளுடன் பொருத்துகிறது.">
+      India's 5 lakh temples discard 800+ tonnes of flower waste daily. Our ML engine predicts it, matches nearby farmers, and converts it to compost — before it reaches the landfill.
+    </p>
+    <div class="hero-ctas">
+      <a href="/temple" class="btn btn-primary" data-en="I'm a Temple" data-ta="நான் ஒரு கோவில்">I'm a Temple</a>
+      <a href="/farmer" class="btn btn-secondary" data-en="I'm a Farmer" data-ta="நான் ஒரு விவசாயி">I'm a Farmer</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="cycle-diagram">
+      <div class="cycle-node node-temple">🏛️<span>Temple</span></div>
+      <div class="cycle-arrow">→</div>
+      <div class="cycle-node node-platform">🤖<span>DevaBhoomi ML</span></div>
+      <div class="cycle-arrow">→</div>
+      <div class="cycle-node node-farmer">🌾<span>Farmer</span></div>
+      <div class="cycle-arrow cycle-return">↩</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-strip">
+  <div class="stat-item">
+    <div class="stat-number">{{ stats.temples }}</div>
+    <div class="stat-label" data-en="Temples Connected" data-ta="கோவில்கள் இணைக்கப்பட்டன">Temples Connected</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-number">{{ stats.farmers }}</div>
+    <div class="stat-label" data-en="Farmers Matched" data-ta="விவசாயிகள் பொருத்தப்பட்டனர்">Farmers Matched</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-number">{{ stats.matches }}</div>
+    <div class="stat-label" data-en="Successful Pickups" data-ta="வெற்றிகரமான சேகரிப்புகள்">Successful Pickups</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-number">{{ stats.waste_collected | round(0) | int }}kg</div>
+    <div class="stat-label" data-en="Waste Diverted" data-ta="திசை திருப்பப்பட்ட கழிவு">Waste Diverted</div>
+  </div>
+</section>
+
+<!-- FESTIVAL ALERTS -->
+{% if festivals %}
+<section class="festival-section">
+  <div class="section-header">
+    <h2 data-en="Upcoming Festival Alerts" data-ta="வரவிருக்கும் திருவிழா எச்சரிக்கைகள்">Upcoming Festival Alerts</h2>
+    <p data-en="ML-predicted waste spikes — farmers are pre-alerted automatically" data-ta="ML-கணிக்கப்பட்ட கழிவு உயர்வுகள் — விவசாயிகளுக்கு முன்கூட்டியே அறிவிக்கப்படுகிறது">ML-predicted waste spikes — farmers are pre-alerted automatically</p>
+  </div>
+  <div class="festival-grid">
+    {% for fest in festivals %}
+    <div class="festival-card alert-{{ fest.alert_level | lower }}">
+      <div class="fest-header">
+        <span class="fest-name">{{ fest.name }}</span>
+        <span class="fest-badge badge-{{ fest.alert_level | lower }}">{{ fest.alert_level }}</span>
+      </div>
+      <div class="fest-date">📅 {{ fest.date }}</div>
+      <div class="fest-days">
+        {% if fest.days_away == 0 %}Today!
+        {% elif fest.days_away == 1 %}Tomorrow
+        {% else %}In {{ fest.days_away }} days{% endif %}
+      </div>
+      <div class="fest-multiplier">
+        <span class="mult-label">Waste Spike</span>
+        <span class="mult-value">{{ fest.waste_multiplier }}×</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <div class="section-header">
+    <h2 data-en="How DevaBhoomi Works" data-ta="DevaBhoomi எவ்வாறு செயல்படுகிறது">How DevaBhoomi Works</h2>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-icon">🏛️</div>
+      <div class="step-num">01</div>
+      <h3 data-en="Temple Logs Waste" data-ta="கோவில் கழிவை பதிவு செய்கிறது">Temple Logs Waste</h3>
+      <p data-en="Temple trustee taps 2 buttons. DevaBhoomi logs today's flower waste quantity." data-ta="கோவில் நிர்வாகி 2 பொத்தான்களை அழுத்துகிறார். DevaBhoomi இன்றைய மலர் கழிவை பதிவு செய்கிறது.">Temple trustee taps 2 buttons. DevaBhoomi logs today's flower waste quantity.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-icon">🤖</div>
+      <div class="step-num">02</div>
+      <h3 data-en="ML Predicts & Matches" data-ta="ML கணித்து பொருத்துகிறது">ML Predicts & Matches</h3>
+      <p data-en="Random Forest model predicts waste for next 7 days. KNN engine finds nearest farmers instantly." data-ta="Random Forest மாதிரி அடுத்த 7 நாட்களுக்கான கழிவை கணிக்கிறது. KNN இயந்திரம் அருகில் உள்ள விவசாயிகளை கண்டறிகிறது.">Random Forest model predicts waste for next 7 days. KNN engine finds nearest farmers instantly.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-icon">📱</div>
+      <div class="step-num">03</div>
+      <h3 data-en="Farmer Gets WhatsApp Alert" data-ta="விவசாயிக்கு WhatsApp எச்சரிக்கை">Farmer Gets WhatsApp Alert</h3>
+      <p data-en="Matched farmers receive instant Tamil WhatsApp message with pickup details and quantity." data-ta="பொருத்தப்பட்ட விவசாயிகள் சேகரிப்பு விவரங்களுடன் உடனடி தமிழ் WhatsApp செய்தி பெறுகிறார்கள்.">Matched farmers receive instant Tamil WhatsApp message with pickup details and quantity.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-icon">🌿</div>
+      <div class="step-num">04</div>
+      <h3 data-en="Waste Becomes Compost" data-ta="கழிவு உரமாகிறது">Waste Becomes Compost</h3>
+      <p data-en="Farmer collects, composts on-farm. Chemical fertilizer replaced. Zero cost. Zero waste." data-ta="விவசாயி சேகரிக்கிறார், பண்ணையில் கம்போஸ்ட் செய்கிறார். ரசாயன உரம் மாற்றப்படுகிறது.">Farmer collects, composts on-farm. Chemical fertilizer replaced. Zero cost. Zero waste.</p>
+    </div>
+  </div>
+</section>
