@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="dashboard-page">
+  <div class="page-header">
+    <h1>🗺️ AI Route Optimizer</h1>
+    <p>Multi-temple waste pickup route optimization using Nearest Neighbour Algorithm</p>
+  </div>
+
+  <div class="route-panel">
+    <div class="route-controls">
+      <div class="form-group">
+        <label>SELECT FARMER</label>
+        <select id="farmerSelect" class="form-select">
+          {% for f in farmers %}
+          <option value="{{ f.id }}">{{ f.name }} — {{ f.city }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>SELECT TEMPLES (multi-select)</label>
+        <div class="temple-checkboxes">
+          {% for t in temples %}
+          <label class="checkbox-label">
+            <input type="checkbox" value="{{ t.id }}" checked class="temple-cb"/>
+            {{ t.name }} ({{ t.size }})
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="optimizeRoute()">
+        🤖 Optimize Pickup Route
+      </button>
+    </div>
+
+    <div id="routeResult" class="route-result hidden">
+      <!-- Summary Cards -->
+      <div class="route-summary">
+        <div class="summary-card">
+          <div class="summary-icon">📍</div>
+          <div class="summary-val" id="totalKm">--</div>
+          <div class="summary-label">Total Distance</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">⏱️</div>
+          <div class="summary-val" id="estTime">--</div>
+          <div class="summary-label">Est. Travel Time</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">♻️</div>
+          <div class="summary-val" id="totalWaste">--</div>
+          <div class="summary-label">Total Waste</div>
+        </div>
+        <div class="summary-card card-green">
+          <div class="summary-icon">🌿</div>
+          <div class="summary-val" id="co2Saved">--</div>
+          <div class="summary-label">CO₂ Saved vs Individual Trips</div>
+        </div>
+      </div>
+
+      <!-- Route Steps -->
+      <div class="route-steps">
+        <h3>📋 Optimized Pickup Sequence</h3>
+        <div class="route-start">
+          <div class="step-dot dot-start">🏠</div>
+          <div class="step-content">
+            <strong id="farmerName">Farmer Starting Point</strong>
+            <span>Begin route from here</span>
+          </div>
+        </div>
+        <div id="routeSteps"></div>
+        <div class="route-end">
+          <div class="step-dot dot-end">🏠</div>
+          <div class="step-content">
+            <strong>Return to Farm</strong>
+            <span>Unload and compost</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why this matters -->
+      <div class="route-insight">
+        <h3>💡 Why Route Optimization Matters</h3>
+        <p>Without optimization, a farmer visits each temple separately — <strong id="unoptKm">--</strong> total km.
+        DevaBhoomi's AI plans the most efficient route — saving fuel, time, and reducing carbon emissions.
+        This is the same algorithm used by logistics companies like Swiggy and Amazon for delivery optimization.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.route-panel{background:var(--white);border-radius:var(--radius);padding:2rem;box-shadow:var(--shadow-md)}
+.route-controls{margin-bottom:2rem}
+.temple-checkboxes{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.checkbox-label{display:flex;align-items:center;gap:8px;font-size:.9rem;cursor:pointer;padding:8px 12px;border-radius:var(--radius-sm);background:var(--gray-1)}
+.checkbox-label:hover{background:var(--saffron-lt)}
+.route-result{margin-top:2rem;border-top:2px solid var(--gray-2);padding-top:2rem}
+.route-result.hidden{display:none}
+.route-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.summary-card{background:var(--gray-1);border-radius:var(--radius);padding:1.5rem;text-align:center}
+.summary-card.card-green{background:var(--green-lt);border:1px solid rgba(45,106,79,.2)}
+.summary-icon{font-size:1.5rem;margin-bottom:.5rem}
+.summary-val{font-size:1.5rem;font-weight:700;font-family:var(--font-mono);color:var(--soil)}
+.summary-label{font-size:.75rem;color:var(--gray-4);margin-top:4px}
+.route-steps{margin-bottom:2rem}
+.route-steps h3{font-size:1rem;font-weight:700;margin-bottom:1rem}
+.route-start,.route-end{display:flex;align-items:center;gap:1rem;padding:.75rem;background:var(--gray-1);border-radius:var(--radius-sm);margin-bottom:.5rem}
+.step-dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.dot-start,.dot-end{background:var(--green-lt)}
+.step-content{display:flex;flex-direction:column}
+.step-content strong{font-size:.9rem}
+.step-content span{font-size:.8rem;color:var(--gray-4)}
+.route-step-item{display:flex;align-items:center;gap:1rem;padding:.75rem;border-radius:var(--radius-sm);margin-bottom:.5rem;border-left:4px solid var(--gray-2)}
+.step-urgency-CRITICAL{border-left-color:var(--red);background:#FFF5F5}
+.step-urgency-HIGH{border-left-color:var(--amber);background:#FFFBF0}
+.step-urgency-MEDIUM{border-left-color:var(--green);background:var(--green-lt)}
+.step-urgency-LOW{border-left-color:var(--gray-3);background:var(--gray-1)}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--soil);color:white;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+.step-info{flex:1}
+.step-name{font-weight:600;font-size:.9rem}
+.step-meta{font-size:.8rem;color:var(--gray-4);margin-top:2px}
+.step-kg{font-weight:700;font-family:var(--font-mono);color:var(--saffron)}
+.step-badge{padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700}
+.route-insight{background:var(--saffron-lt);border-radius:var(--radius);padding:1.5rem}
+.route-insight h3{font-size:1rem;font-weight:700;margin-bottom:.75rem}
+.route-insight p{font-size:.88rem;color:var(--gray-4);line-height:1.7}
+.connector-line{width:2px;height:20px;background:var(--gray-2);margin-left:19px}
+@media(max-width:900px){.route-summary{grid-template-columns:1fr 1fr}}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function optimizeRoute() {
+  const farmerId = parseInt(document.getElementById('farmerSelect').value);
+  const templeIds = [...document.querySelectorAll('.temple-cb:checked')].map(cb => parseInt(cb.value));
+  
+  if (templeIds.length === 0) { alert('Select at least one temple!'); return; }
+  
+  const btn = document.querySelector('.btn-full');
+  btn.textContent = '⏳ Calculating optimal route...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/optimize-route', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ farmer_id: farmerId, temple_ids: templeIds })
+    });
+    const data = await res.json();
+
+    // Fill summary
+    document.getElementById('totalKm').textContent = data.total_km + ' km';
+    document.getElementById('estTime').textContent = data.estimated_time_mins + ' mins';
+    document.getElementById('totalWaste').textContent = data.total_waste_kg + ' kg';
+    document.getElementById('co2Saved').textContent = data.co2_saved_kg + ' kg CO₂';
+    document.getElementById('farmerName').textContent = data.farmer.name + ' (Starting Point)';
+    document.getElementById('unoptKm').textContent = (data.temples_count * 3.5).toFixed(1) + ' km';
+
+    // Fill route steps
+    const stepsDiv = document.getElementById('routeSteps');
+    stepsDiv.innerHTML = data.route.map((stop, i) => `
+      <div class="connector-line"></div>
+      <div class="route-step-item step-urgency-${stop.urgency}">
+        <div class="step-num">${i + 1}</div>
+        <div class="step-info">
+          <div class="step-name">🏛️ ${stop.name}</div>
+          <div class="step-meta">📍 ${stop.dist_from_prev} km from previous · 📦 ${stop.cumulative_km} km total</div>
+        </div>
+        <div class="step-kg">${stop.predicted_kg} kg</div>
+        <span class="step-badge badge-${stop.urgency.toLowerCase()}">${stop.urgency}</span>
+      </div>
+    `).join('');
+
+    document.getElementById('routeResult').className = 'route-result';
+  } catch(e) {
+    alert('Error: Make sure Flask is running.');
+  }
+  btn.textContent = '🤖 Optimize Pickup Route';
+  btn.disabled = false;
+}
+</script>
+{% endblock %}
