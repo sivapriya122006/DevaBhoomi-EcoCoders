@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="dashboard-page">
+  <div class="page-header">
+    <h1>📊 Admin Dashboard</h1>
+    <p data-en="Live impact metrics across all temples and farmers" data-ta="அனைத்து கோவில்கள் மற்றும் விவசாயிகளின் நேரடி தாக்க அளவீடுகள்">Live impact metrics across all temples and farmers</p>
+  </div>
+
+  <div class="impact-grid">
+    <div class="impact-card card-green">
+      <div class="impact-icon">🏛️</div>
+      <div class="impact-number">{{ stats.temples }}</div>
+      <div class="impact-label" data-en="Temples" data-ta="கோவில்கள்">Temples</div>
+    </div>
+    <div class="impact-card card-amber">
+      <div class="impact-icon">🌾</div>
+      <div class="impact-number">{{ stats.farmers }}</div>
+      <div class="impact-label" data-en="Farmers" data-ta="விவசாயிகள்">Farmers</div>
+    </div>
+    <div class="impact-card card-blue">
+      <div class="impact-icon">🤝</div>
+      <div class="impact-number">{{ stats.matches }}</div>
+      <div class="impact-label" data-en="Matches Made" data-ta="பொருத்தங்கள்">Matches Made</div>
+    </div>
+    <div class="impact-card card-saffron">
+      <div class="impact-icon">♻️</div>
+      <div class="impact-number">{{ stats.total_waste_kg }}kg</div>
+      <div class="impact-label" data-en="Waste Diverted" data-ta="திசை திருப்பப்பட்ட கழிவு">Waste Diverted</div>
+    </div>
+  </div>
+
+  {% if festivals %}
+  <div class="admin-section">
+    <h2 data-en="Festival Intelligence — Next 30 Days" data-ta="திருவிழா நுண்ணறிவு — அடுத்த 30 நாட்கள்">⚡ Festival Intelligence — Next 30 Days</h2>
+    <table class="data-table">
+      <thead><tr><th>Festival</th><th>Date</th><th>Days Away</th><th>Waste Multiplier</th><th>Alert Level</th></tr></thead>
+      <tbody>
+        {% for fest in festivals %}
+        <tr class="row-{{ fest.alert_level | lower }}">
+          <td>{{ fest.name }}</td>
+          <td>{{ fest.date }}</td>
+          <td>{% if fest.days_away == 0 %}Today{% elif fest.days_away == 1 %}Tomorrow{% else %}{{ fest.days_away }} days{% endif %}</td>
+          <td><strong>{{ fest.waste_multiplier }}×</strong></td>
+          <td><span class="badge badge-{{ fest.alert_level | lower }}">{{ fest.alert_level }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <div class="admin-section">
+    <h2 data-en="Recent Activity Log" data-ta="சமீபத்திய செயல்பாட்டு பதிவு">📋 Recent Activity Log</h2>
+    {% if stats.logs %}
+    <table class="data-table">
+      <thead><tr><th>Temple</th><th>Predicted Waste</th><th>Festival</th><th>Farmers Alerted</th><th>Time</th></tr></thead>
+      <tbody>
+        {% for log in stats.logs %}
+        <tr>
+          <td>{{ log.temple }}</td>
+          <td>{{ log.predicted_kg }} kg</td>
+          <td>{{ log.festival or '—' }}</td>
+          <td>{{ log.farmers_alerted }}</td>
+          <td>{{ log.timestamp }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <p data-en="No predictions yet. Go to Temple Dashboard and run a prediction." data-ta="இன்னும் கணிப்புகள் இல்லை. கோவில் டாஷ்போர்டுக்கு சென்று கணிப்பை இயக்கவும்.">No predictions yet. Go to Temple Dashboard and run a prediction.</p>
+      <a href="/temple" class="btn btn-primary">Go to Temple Dashboard</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
