@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="dashboard-page">
+  <div class="page-header">
+    <h1 data-en="Temple Dashboard" data-ta="கோவில் டாஷ்போர்டு">🏛️ Temple Dashboard</h1>
+    <p data-en="Log your flower waste — DevaBhoomi finds the right farmer automatically" data-ta="உங்கள் மலர் கழிவை பதிவு செய்யுங்கள் — DevaBhoomi தானாகவே சரியான விவசாயியை கண்டறியும்">Log your flower waste — DevaBhoomi finds the right farmer automatically</p>
+  </div>
+
+  <!-- PREDICT PANEL -->
+  <div class="predict-panel">
+    <h2 data-en="Predict & Match Now" data-ta="இப்போதே கணித்து பொருத்துங்கள்">Predict & Match Now</h2>
+    <div class="predict-form">
+      <div class="form-group">
+        <label data-en="Select Your Temple" data-ta="உங்கள் கோவிலை தேர்ந்தெடுக்கவும்">Select Your Temple</label>
+        <select id="templeSelect" class="form-select">
+          {% for t in temples %}
+          <option value="{{ t.id }}" data-size="{{ t.size }}">{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-en="Temple Size" data-ta="கோவில் அளவு">Temple Size</label>
+        <select id="templeSize" class="form-select">
+          <option value="small">Small (Local)</option>
+          <option value="medium" selected>Medium (Town)</option>
+          <option value="large">Large (City)</option>
+          <option value="major">Major (Regional)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-en="Date to Predict" data-ta="கணிக்க வேண்டிய தேதி">Date to Predict</label>
+        <input type="date" id="predictDate" class="form-input" value="{{ today.strftime('%Y-%m-%d') }}"/>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="predictWaste()" data-en="🤖 Predict & Find Farmers" data-ta="🤖 கணித்து விவசாயிகளை கண்டறி">🤖 Predict & Find Farmers</button>
+    </div>
+
+    <!-- RESULT -->
+    <div id="predictResult" class="predict-result hidden">
+      <div class="result-header">
+        <div class="result-kg" id="resultKg">-- kg</div>
+        <div class="result-label" data-en="Predicted Flower Waste" data-ta="கணிக்கப்பட்ட மலர் கழிவு">Predicted Flower Waste</div>
+      </div>
+      <div id="festivalAlert" class="festival-alert hidden"></div>
+      <div class="matched-farmers">
+        <h3 data-en="Farmers Alerted via WhatsApp" data-ta="WhatsApp வழியாக எச்சரிக்கப்பட்ட விவசாயிகள்">📱 Farmers Alerted via WhatsApp</h3>
+        <div id="farmerList" class="farmer-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FESTIVAL ALERTS -->
+  {% if festivals %}
+  <div class="festival-panel">
+    <h2 data-en="Upcoming Festival Waste Spikes" data-ta="வரவிருக்கும் திருவிழா கழிவு உயர்வுகள்">⚠️ Upcoming Festival Waste Spikes</h2>
+    <div class="festival-list">
+      {% for fest in festivals %}
+      <div class="fest-row alert-{{ fest.alert_level | lower }}">
+        <span class="fest-name">{{ fest.name }}</span>
+        <span class="fest-date">{{ fest.date }}</span>
+        <span class="fest-days-away">{% if fest.days_away == 0 %}Today{% elif fest.days_away == 1 %}Tomorrow{% else %}{{ fest.days_away }} days{% endif %}</span>
+        <span class="fest-mult">{{ fest.waste_multiplier }}× waste</span>
+        <span class="fest-badge badge-{{ fest.alert_level | lower }}">{{ fest.alert_level }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+async function predictWaste() {
+  const templeId = document.getElementById('templeSelect').value;
+  const templeSize = document.getElementById('templeSize').value;
+  const dateVal = document.getElementById('predictDate').value;
+  const date = new Date(dateVal);
+  const btn = document.querySelector('.btn-full');
+  btn.textContent = '⏳ Predicting...';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/predict', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        temple_id: templeId,
+        temple_size: templeSize,
+        month: date.getMonth() + 1,
+        day: date.getDate()
+      })
+    });
+    const data = await res.json();
+    document.getElementById('resultKg').textContent = data.predicted_kg + ' kg';
+    const festDiv = document.getElementById('festivalAlert');
+    if (data.is_festival) {
+      festDiv.className = 'festival-alert';
+      festDiv.innerHTML = `🎉 <strong>${data.festival}</strong> — ${data.festival_multiplier}× normal waste predicted. Farmers pre-alerted 7 days ahead.`;
+    } else {
+      festDiv.className = 'festival-alert hidden';
+    }
+    const farmerList = document.getElementById('farmerList');
+    farmerList.innerHTML = data.matched_farmers.map(f => `
+      <div class="farmer-card">
+        <div class="farmer-name">🌾 ${f.name}</div>
+        <div class="farmer-dist">📍 ${f.distance_km} km away</div>
+        <div class="farmer-crop">🌱 ${f.crop}</div>
+        <div class="farmer-status">✅ WhatsApp Sent</div>
+      </div>
+    `).join('');
+    document.getElementById('predictResult').className = 'predict-result';
+  } catch(e) {
+    alert('Prediction failed. Make sure Flask is running.');
+  }
+  btn.textContent = '🤖 Predict & Find Farmers';
+  btn.disabled = false;
+}
+</script>
+{% endblock %}
