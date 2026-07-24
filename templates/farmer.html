@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="dashboard-page">
+  <div class="page-header">
+    <h1 data-en="Farmer Dashboard" data-ta="விவசாயி டாஷ்போர்டு">🌾 Farmer Dashboard</h1>
+    <p data-en="View available temple waste near you and confirm pickups" data-ta="உங்களுக்கு அருகில் உள்ள கோவில் கழிவை பார்க்கவும் மற்றும் சேகரிப்பை உறுதிப்படுத்தவும்">View available temple waste near you and confirm pickups</p>
+  </div>
+  <div class="farmer-grid">
+    {% for temple in temples %}
+    <div class="temple-waste-card">
+      <div class="twc-header">
+        <span class="twc-icon">🏛️</span>
+        <div>
+          <div class="twc-name">{{ temple.name }}</div>
+          <div class="twc-name-ta">{{ temple.name_ta }}</div>
+        </div>
+        <span class="twc-size size-{{ temple.size }}">{{ temple.size }}</span>
+      </div>
+      <div class="twc-city">📍 {{ temple.city }}</div>
+      <div class="twc-contact">📞 {{ temple.contact }}</div>
+      <button class="btn btn-secondary btn-sm" onclick="confirmPickup('{{ temple.name }}')" data-en="✅ Confirm Pickup" data-ta="✅ சேகரிப்பை உறுதிப்படுத்து">✅ Confirm Pickup</button>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+function confirmPickup(templeName) {
+  alert(`✅ Pickup confirmed for ${templeName}!\nWhatsApp confirmation sent to temple.`);
+}
+</script>
+{% endblock %}
