@@ -455,6 +455,11 @@ This is the same formula used in aviation and navigation systems.
 ![Admin Dashboard](screenshots/admin.png)
 
 ---
+## 🎥 Demo Video
+
+Watch our complete project demo here:
+
+🔗 https://drive.google.com/file/d/1ysfDsp5bRNY7GHvlQt6DG-qTU99_Bdp5/view?usp=drivesdk
 
 ## 📚 References
 
