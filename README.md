@@ -292,18 +292,90 @@ http://YOUR_IP:5000
 
 ---
 
+
 ## 🔌 API Documentation
 
-🚧 APIs are currently being integrated into the Flask backend.
+### POST /api/predict
+Runs ML prediction and farmer matching.
 
-The application will provide the following REST APIs:
+**Request:**
+```json
+{
+  "temple_id": 1,
+  "temple_size": "major",
+  "month": 10,
+  "day": 20
+}
+```
 
-| API | Purpose | Status |
-|------|---------|--------|
-| **POST /api/predict** | Predict flower waste quantity and return nearby farmer matches | 🚧 In Progress |
-| **GET /api/farmers** | Retrieve registered farmers and their details | 🚧 In Progress |
-| **GET /api/festivals** | Retrieve upcoming festivals and expected waste levels | 🚧 In Progress |
-| **GET /api/statistics** | Display platform impact metrics on the admin dashboard | 🚧 In Progress |
+**Response:**
+```json
+{
+  "predicted_kg": 4322.0,
+  "festival": "Diwali",
+  "festival_multiplier": 15,
+  "is_festival": true,
+  "temple_name": "Manakula Vinayagar Temple",
+  "matched_farmers": [
+    {
+      "id": 1,
+      "name": "Murugan R",
+      "distance_km": 2.41,
+      "crop": "Vegetables",
+      "contact": "9876501111"
+    }
+  ]
+}
+```
+
+### GET /api/festivals?days=30
+Returns upcoming festivals within specified days.
+
+**Response:**
+```json
+[
+  {
+    "name": "Diwali",
+    "date": "20 Oct 2026",
+    "days_away": 88,
+    "waste_multiplier": 15,
+    "alert_level": "HIGH"
+  }
+]
+```
+
+
+### GET /api/stats
+Returns live platform impact statistics.
+
+**Response:**
+```json
+{
+  "temples": 3,
+  "farmers": 5,
+  "matches": 12,
+  "total_waste_kg": 847.3,
+  "fertilizer_saved_kg": 254.2,
+  "co2_saved_kg": 423.7
+}
+```
+
+### GET /api/temples
+Returns all registered temples.
+
+### POST /api/temples
+Registers a new temple.
+
+**Request:**
+```json
+{
+  "name": "New Temple",
+  "size": "medium",
+  "lat": 11.9300,
+  "lon": 79.8200,
+  "contact": "9876543210",
+  "city": "Puducherry"
+}
 ```
 
 ---
