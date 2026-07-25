@@ -442,18 +442,17 @@ This is the same formula used in aviation and navigation systems.
 
 ## 📸 Demo Screenshots
 
-### Homepage — Festival Intelligence
-![Homepage](screenshots/homepage.png)
+### 🏠 Homepage — Festival Intelligence
+![Homepage](homepage.jpeg)
 
-### Temple Dashboard — ML Prediction
-![Temple Dashboard](screenshots/temple.png)
+### 🏛️ Temple Dashboard — ML Prediction
+![Temple Dashboard](temple.jpeg)
 
-### Farmer Dashboard
-![Farmer Dashboard](screenshots/farmer.png)
+### 🌾 Farmer Dashboard
+![Farmer Dashboard](farmer.jpeg)
 
-### Admin Dashboard — Impact Metrics
-![Admin Dashboard](screenshots/admin.png)
-
+### 📊 Admin Dashboard — Impact Metrics
+![Admin Dashboard](admin.jpeg)
 ---
 ## 🎥 Demo Video
 
