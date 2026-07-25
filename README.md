@@ -212,6 +212,11 @@ TODAY'S DATE → Check against festival calendar
 ```
 
 ---
+## 🏗️ System Architecture & Workflow
+
+The following workflow illustrates how DevaBhoomi processes temple flower waste from prediction to farmer matching and environmental impact.
+
+![DevaBhoomi System Workflow](system-workflow.jpeg)
 
 ## 📁 Folder Structure
 
